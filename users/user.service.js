@@ -1,4 +1,4 @@
-﻿const config = require('./config.json');
+﻿const config = require('../config.json');
 const jwt = require('jsonwebtoken');
 
 // users hardcoded for simplicity, store in a db for production applications
