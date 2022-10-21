@@ -12,25 +12,9 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
-app.get("/profile", verifyJwt, (req, res) => {
-  const token = req.headers.authorization.split(" ")[1];
-
-  jwt.verify(token, config.secret, (error, decode) => {
-    if (error) {
-      return res.json({
-        auth: false,
-        error,
-      });
-    }
-
-    const user = users.find((u) => u.id === decode.sub);
-  
-    return res.json({
-      user: {
-        ...omitPassword(user),
-      },
-      auth: true,
-    });
+app.get("/user/profile", verifyJwt, (req, res) => {
+  return res.json({
+    ...req.auth,
   });
 });
 
@@ -47,7 +31,9 @@ app.post("/login", (req, res) => {
   const token = jwt.sign({ sub: user.id }, config.secret, { expiresIn: "30d" });
 
   return res.json({
-    ...omitPassword(user),
+    user: {
+      ...omitPassword(user),
+    },
     token,
   });
 });
@@ -69,5 +55,23 @@ function omitPassword(user) {
 }
 
 function verifyJwt(req, res, next) {
-  next();
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader != "string") {
+    return res.sendStatus(403);
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  jwt.verify(token, config.secret, (error, decode) => {
+    if (error) return res.sendStatus(403);
+
+    const user = users.find((u) => u.id === decode.sub);
+    req.auth = {
+      user: {
+        ...omitPassword(user),
+      },
+      auth: true,
+    };
+    next();
+  });
 }
