@@ -34,7 +34,7 @@ app.post("/login", (req, res) => {
     user: {
       ...omitPassword(user),
     },
-    token,
+    authToken: token,
   });
 });
 
